@@ -1,0 +1,6 @@
+Error Type: SyntaxError / IndentationError
+Error Pattern: invalid syntax / expected ':' / '(' was never closed / unterminated string literal / expected an indented block / unexpected indent
+Common Cause: Python's parser frequently reports the error on the line immediately following the actual defect. Root causes include unclosed parentheses/brackets/braces on a preceding line, an unclosed string quote, a missing trailing colon (:) on compound headers (if, elif, else, for, while, def, class, try, except, finally), using single '=' instead of '==' inside a condition, or mixed tabs/spaces and missing 4-space indentation after a colon.
+Debugging Solution: Inspect both the reported traceback line and the 1 to 3 preceding lines. Balance all opening and closing delimiters (), [], {}, and matching quotes; verify compound headers end with ':'; replace '=' with '==' in conditional checks; and enforce consistent 4-space indentation (add 'pass' for intentionally empty blocks).
+Fix Example: If line 12 reports `SyntaxError` at `return total`, inspect line 11 for an unclosed call like `total = sum([a, b, c)` and close the bracket: `total = sum([a, b, c])`.
+---

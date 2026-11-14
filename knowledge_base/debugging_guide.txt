@@ -1,0 +1,69 @@
+Error Type: General Python Debugging Strategy
+Error Pattern: Code Repair Best Practices and Safe Patch Generation
+Common Cause: Fixing a bug inadvertently alters function signatures, removes required print outputs, or breaks adjacent logic.
+Debugging Solution:
+1. Preserve Function Signatures: Never rename functions, classes, or existing parameters when repairing code.
+2. Minimal Invasion: Modify only the buggy lines and necessary guard conditions while keeping the rest of the original algorithm intact.
+3. Edge Case Handling: When fixing runtime crashes (ZeroDivisionError, IndexError, KeyError, AttributeError), ensure the code handles empty collections or missing keys gracefully without crashing.
+4. Self-Contained Executable Output: Always output valid, complete Python source code without surrounding conversational text or markdown explanations.
+---
+Error Type: UnboundLocalError
+Error Pattern: cannot access local variable where it is not associated with a value
+Common Cause: Assigning a value to a variable inside a function after referencing it, or attempting to modify a global variable inside a function without declaring it or initializing it locally first.
+Debugging Solution: Initialize the local variable at the very top of the function before any conditional branches or loops reference it.
+---
+Error Type: RecursionError
+Error Pattern: maximum recursion depth exceeded
+Common Cause: A recursive function is missing a valid base case, or the recursive step does not move the input closer to the base case.
+Debugging Solution: Add an explicit base case at the start of the function (e.g., `if n <= 1: return 1`) and verify that each recursive call decrements or reduces the problem size toward that base case.
+---
+Strategy Category: Traceback Stack-Boundary Isolation
+Trigger Condition: Multi-frame Python traceback involving standard library or third-party packages (e.g., Pandas, NumPy, requests, json) alongside user project files.
+Diagnostic Steps:
+1. Read the traceback strictly from bottom to top. Identify the exact exception type and message on the final line first.
+2. Walk upward through the stack frames until you hit the deepest frame belonging to user-authored code (ignore internal library frames unless verifying expected input types).
+3. Inspect the arguments passed from that user frame into the failing library call.
+4. Trace each argument backward 3 to 10 lines to verify its runtime type, shape, encoding, or nullability before the call occurred.
+Guardrail: Never propose modifications to third-party site-packages or standard library files. Fix the data transformation or argument validation in the user frame immediately preceding the library boundary.
+Example Application: If a traceback ends inside `json/decoder.py` with `JSONDecodeError`, locate the user frame calling `json.loads(response_text)` and check whether `response_text` is empty or contains an HTTP error HTML payload before parsing.
+---
+Strategy Category: Backward Data-Flow Slicing for NoneType and Type Mismatches
+Trigger Condition: AttributeError ('NoneType' object has no attribute ...), TypeError (unsupported operand type(s) / 'NoneType' object is not subscriptable), or KeyError.
+Diagnostic Steps:
+1. Identify the exact variable holding the unexpected `None` or wrong type on the failing line.
+2. Perform a backward slice: locate every assignment, function return, or dictionary lookup that populates that variable prior to the failure.
+3. Check for three common upstream causes: (a) a function with a missing `return` statement on a conditional branch, (b) assigning the result of an in-place mutator (`.sort()`, `.append()`, `.update()`), or (c) `.get(key)` returning `None` when a key is absent.
+4. Fix the upstream producer so it guarantees the expected return type rather than patching the consumer.
+Guardrail: Do not silence the error by wrapping the failing line in `if var is not None:` unless `None` is a valid domain state. Fix the root producer where `None` was accidentally introduced.
+Example Application: When `user.email` fails with `AttributeError: 'NoneType'`, trace `user = find_user(uid)` back to `find_user()` and ensure missing records raise a explicit domain exception or are handled at lookup time instead of silently falling off the end of the function.
+---
+Strategy Category: Anti-Symptom-Masking Guardrail
+Trigger Condition: Any runtime exception where a naive fix might suppress the error without correcting program behavior.
+Diagnostic Steps:
+1. Verify whether the proposed code change resolves the underlying state violation or merely hides the exception.
+2. Reject any candidate fix that introduces bare `except:` or broad `except Exception: pass` blocks around broken logic.
+3. Reject candidate fixes that hardcode expected test outputs or bypass failing assertions.
+4. Confirm that after the fix, valid inputs produce the exact intended domain output and invalid inputs fail predictably.
+Guardrail: Exception handling (`try/except`) is only valid at external I/O boundaries (file reads, network calls, user input parsing). Never use `try/except` to work around `IndexError`, `KeyError`, `TypeError`, or `UnboundLocalError` inside internal algorithm logic.
+Example Application: If `items[i + 1]` raises `IndexError` on the last iteration of a loop, adjust the loop bound to `range(len(items) - 1)` rather than catching `IndexError`.
+---
+Strategy Category: Silent Logic & Edge-Case Isolation (Zero-Exception Bugs)
+Trigger Condition: Code executes without raising an exception, but unit tests, assertions, or expected outputs fail.
+Diagnostic Steps:
+1. Compare actual output against expected output to classify the discrepancy: off-by-one count, stale/accumulated state across calls, wrong sort/filter order, or floating-point rounding drift.
+2. Test boundary conditions mentally against the code: empty collections (`[]`, `{}`), single-element inputs, zero/negative numbers, and duplicate values.
+3. Check loop termination conditions (`<` vs `<=`), slice bounds (`arr[:n]` vs `arr[:n+1]`), and operator precedence (`and` vs `or`, bitwise `&` vs logical `and`).
+4. Check for shared mutable state across iterations or function invocations (default mutable arguments, shallow copies of nested lists/dicts).
+Guardrail: Explain the exact step-by-step variable state transition on the failing test input before writing the corrected code block.
+Example Application: If a binary search or pagination helper loops infinitely or drops the final element, trace `low`, `high`, and `mid` on a 1-element and 2-element list to verify strict termination progress.
+---
+Strategy Category: Minimal-Diff Preservation & LangGraph Retry Discipline
+Trigger Condition: Iterative code repair loop where previous fix attempts failed verification or introduced regressions.
+Diagnostic Steps:
+1. If a prior fix attempt failed, inspect the new traceback or test failure to determine whether the original bug persists or a new regression was introduced.
+2. Do not repeat an identical patch that already failed verification; pivot to an alternative root-cause hypothesis from the backward slice.
+3. Preserve all existing function names, parameter signatures, return types, class interfaces, and top-level imports so external callers and test harnesses do not break.
+4. Modify only the minimal set of lines required to resolve the root cause; avoid unsolicited refactoring or renaming unrelated variables.
+Guardrail: Output complete, runnable code with no truncation placeholders (`# ... rest of code`), ensuring all imports required by the fix are present at the top of the file.
+Example Application: When fixing a helper function inside a multi-function module, retain exact parameter names and default values so keyword-argument calls in test suites continue to bind properly.
+---
