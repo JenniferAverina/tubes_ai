@@ -4,37 +4,35 @@ from typing import TypedDict, Optional, Any
 
 class AgentState(TypedDict, total=False):
 
-    # USER INPUT
+    # Input
     source_code: str
     file_path: str
 
-    # MEMBER 1: SYNTAX CHECKER
+    # Syntax Checker Worker (Member 1)
     syntax_result: Optional[dict[str, Any]]
     execution_result: Optional[dict[str, Any]]
     diagnosis: Optional[dict[str, Any]]
     react_trace: list[dict[str, Any]]
 
-    # MEMBER 2: RAG SPECIALIST
+    # RAG Specialist Worker (Member 2)
     rag_query: str
     rag_result: list[dict[str, Any]]
     rag_status: str
     rewritten_query: str
     retry_count: int
 
-    # MEMBER 2: CODE FIXER
+    # Code Fixer Worker (Member 2)
     fixed_code: str
     fix_explanation: str
 
-    # HUMAN-IN-THE-LOOP
+    # Human-in-the-Loop
     approval: Optional[bool]
-
-    # APPLY PATCH
     patch_applied: bool
     patch_result: str
 
-    # SUPERVISOR
+    # Supervisor (Member 3)
     next_worker: str
     workflow_status: str
 
-    # LOGGING
+    # Workflow information
     messages: list[str]
