@@ -1,0 +1,7 @@
+Error: ZeroDivisionError
+Symptom: division by zero during arithmetic operation.
+Solution: Before dividing, check if the denominator is zero using an if-else statement (e.g., if b != 0: result = a / b), or wrap the operation in a try-except ZeroDivisionError block.
+---
+Error: IndexError
+Symptom: list index out of range when accessing a sequence.
+Solution: Verify the index is strictly less than len(my_list) before accessing, or iterate directly over elements using 'for item in my_list:' instead of range indices.
