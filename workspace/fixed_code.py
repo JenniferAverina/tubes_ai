@@ -1,4 +1,2 @@
-def greet(name):
-    print(f'Hello, {name}!')
-
-greet('Alice')
+numbers = [1, 2, 3]
+print(numbers[2])

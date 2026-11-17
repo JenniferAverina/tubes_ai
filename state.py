@@ -15,15 +15,13 @@ class AgentState(TypedDict, total=False):
     react_trace: list[dict[str, Any]]
 
     # RAG Specialist Worker (Member 2)
-    rag_query: str
-    rag_result: list[dict[str, Any]]
-    rag_status: str
+    knowledge_result: str
     rewritten_query: str
-    retry_count: int
+    search_attempt: int
 
     # Code Fixer Worker (Member 2)
     fixed_code: str
-    fix_explanation: str
+    fix_attempts: int
 
     # Human-in-the-Loop
     approval: Optional[bool]

@@ -51,4 +51,9 @@ def supervisor_node(state: AgentState) -> dict:
 
 def supervisor_router(state: AgentState) -> str:
 
-    return state.get("next_worker", "END")
+    next_worker = state.get("next_worker", "END")
+
+    print("\n========== SUPERVISOR ROUTER ==========")
+    print("Routing decision:", next_worker)
+
+    return next_worker
