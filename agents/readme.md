@@ -1,145 +1,45 @@
+
 # Automated Code Debugger & Bug Finder
 
-Project Tugas Besar Kecerdasan Buatan (IF-504)
+An Agentic AI-based Python debugging system that detects programming errors, retrieves relevant debugging knowledge, generates code fixes, and validates the proposed solution using multiple AI agents.
 
-Sistem Automated Code Debugger merupakan aplikasi berbasis Python yang menggunakan konsep **Agentic AI** untuk mendeteksi, menganalisis, dan memperbaiki kesalahan pada source code Python secara otomatis.
-
-Sistem ini menggunakan:
-- Python sebagai bahasa pemrograman utama.
-- LangGraph untuk mengatur alur kerja multi-agent.
-- LangChain untuk mengintegrasikan Large Language Model.
-- Ollama untuk menjalankan AI secara lokal.
-- Qwen 2.5:7b sebagai model bahasa.
-- nomic-embed-text untuk menghasilkan embedding.
-- ChromaDB sebagai vector database untuk menyimpan Knowledge Base.
+The system uses LangChain, LangGraph, Ollama, and ChromaDB to implement an autonomous debugging workflow.
 
 ---
 
-## 1. Prerequisites
+## 1. Project Overview
 
-Pastikan perangkat sudah memiliki:
+Automated Code Debugger is designed to help identify and fix common Python programming errors.
 
-1. Python 3.10 atau lebih baru.
-2. Visual Studio Code.
-3. Ollama.
-4. Git (opsional).
+The user provides Python source code directly inside `main.py`. The system then analyzes the code, identifies potential errors, searches for relevant debugging knowledge, generates a possible fix, and validates the corrected code.
 
-Model AI yang digunakan:
+Before applying the proposed fix, the system requests human approval.
 
-| Model | Fungsi |
+### Main Features
+
+- Automated Python error detection
+- ReAct Diagnostic Loop
+- Agentic Retrieval-Augmented Generation (RAG)
+- Automatic query rewriting
+- Supervisor-Worker multi-agent architecture
+- Code fix generation
+- Automatic code validation
+- Human-in-the-Loop approval
+- Debug trace logging
+
+---
+
+## 2. Technologies Used
+
+| Technology | Purpose |
 |---|---|
-| `qwen2.5:7b` | Menganalisis dan memperbaiki kode serta melakukan Query Rewriting |
-| `nomic-embed-text` | Mengubah dokumen Knowledge Base dan query menjadi embedding |
-
-## 2. Installation & Setup
-
-### Step 1 — Clone atau buka project
-
-Buka terminal VS Code dan masuk ke folder project:
-
-```powershell
-cd C:\Semester_5\AI\tubes_ai\tubes_ai
-```
-
-Pastikan terminal berada di folder utama project yang berisi `main.py`.
-
-### Step 2 — Membuat Virtual Environment
-
-Buat virtual environment:
-
-```powershell
-python -m venv .venv
-```
-
-Aktifkan virtual environment:
-
-```powershell
-.venv\Scripts\Activate.ps1
-```
-
-Jika berhasil, terminal akan menampilkan prefix:
-
-```text
-(.venv) PS C:\...
-```
-
-### Step 3 — Install Dependencies
-
-Install library yang dibutuhkan:
-
-```powershell
-pip install langchain langchain-core langchain-ollama langchain-chroma langgraph chromadb
-```
-
-Jika project sudah menyediakan `requirements.txt`, gunakan:
-
-```powershell
-pip install -r requirements.txt
-```
-
-### Step 4 — Install dan Jalankan Ollama
-
-Download Ollama melalui:
-
-https://ollama.com/download
-
-Setelah instalasi, download model yang dibutuhkan:
-
-```powershell
-ollama pull qwen2.5:7b
-```
-
-```powershell
-ollama pull nomic-embed-text
-```
-
-Pastikan kedua model sudah terpasang:
-
-```powershell
-ollama list
-```
-
-Model yang harus tersedia:
-
-```text
-qwen2.5:7b
-nomic-embed-text
-```
-
-Ollama harus berjalan ketika aplikasi digunakan. Pada Windows, Ollama biasanya berjalan melalui aplikasi background setelah dibuka.
-
-### Step 5 — Jalankan Program
-
-Pastikan virtual environment aktif dan terminal berada di folder utama project.
-
-Jalankan:
-
-```powershell
-python main.py
-```
-
-Jika berhasil, akan muncul menu:
-
-```text
-========== AVAILABLE TEST CASES ==========
-
-1. valid
-2. zerodivision
-3. indexerror
-4. keyerror
-5. syntax
-6. attributeerror
-
-Select test case:
-```
-
-Masukkan nama test case, misalnya:
-
-```text
-zerodivision
-```
-
-Sistem akan mulai melakukan proses debugging.
+| Python | Main programming language |
+| LangChain | LLM integration |
+| LangGraph | Multi-agent workflow orchestration |
+| Ollama | Local LLM execution |
+| Qwen 2.5 7B | AI reasoning and code generation |
+| ChromaDB | Vector database |
+| nomic-embed-text | Text embedding model |
 
 ---
 
@@ -177,440 +77,300 @@ tubes_ai/
 └── README.md
 ```
 
-### Fungsi Setiap File
+---
 
-| File / Folder | Fungsi |
-|---|---|
-| `main.py` | Entry point untuk menjalankan aplikasi dan menangani persetujuan pengguna |
-| `state.py` | Menyimpan struktur state yang digunakan antar-agent |
-| `graph.py` | Mengatur workflow, node, edge, routing, dan Human-in-the-Loop |
-| `test_case.py` | Menyediakan contoh source code dengan berbagai jenis error |
-| `agents/syntax_checker.py` | Mendeteksi syntax error dan runtime error |
-| `agents/rag_specialist.py` | Mencari solusi dari Knowledge Base menggunakan RAG |
-| `agents/code_fixer.py` | Menghasilkan source code yang sudah diperbaiki |
-| `agents/supervisor.py` | Menentukan agent berikutnya berdasarkan hasil proses |
-| `tools/syntax_tool.py` | Membantu pemeriksaan syntax Python |
-| `tools/execution_tool.py` | Menjalankan source code untuk mendeteksi runtime error |
-| `tools/trace_logger.py` | Mencatat proses Thought, Action, dan Observation |
-| `knowledge_base/` | Menyimpan dokumentasi error dan strategi debugging |
-| `chroma_db/` | Menyimpan vector database hasil embedding Knowledge Base |
-| `workspace/buggy_code.py` | File source code yang sedang diperiksa |
-| `workspace/fixed_code.py` | File hasil perbaikan dari Code Fixer |
+## 4. Installation
+
+### Requirements
+
+- Python 3.10 or newer
+- Ollama
+- Git (optional)
+
+### Step 1: Clone or Download the Project
+
+Open the project directory in Visual Studio Code.
+
+### Step 2: Create Virtual Environment
+
+```bash
+python -m venv .venv
+```
+
+Activate the environment on Windows:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+### Step 3: Install Dependencies
+
+Install the required Python packages:
+
+```bash
+pip install langchain langchain-community langchain-ollama langgraph chromadb
+```
+
+Install any additional dependencies used by the project.
+
+### Step 4: Install Ollama Models
+
+Download the Qwen model:
+
+```bash
+ollama pull qwen2.5:7b
+```
+
+Download the embedding model:
+
+```bash
+ollama pull nomic-embed-text
+```
+
+Make sure Ollama is running before executing the project.
 
 ---
 
-## 4. System Architecture
+## 5. How to Use
 
-Sistem menggunakan arsitektur **Supervisor-Worker Multi-Agent** dengan LangGraph.
+### Step 1: Open main.py
 
-Setiap agent memiliki tugas masing-masing. Supervisor bertugas mengatur perpindahan antar-agent berdasarkan hasil diagnosis dan proses perbaikan.
+The source code to be analyzed is written directly inside the `SOURCE_CODE` variable.
 
-### Agent Components
-
-**1. Syntax Checker**
-
-Bertugas memeriksa source code sebelum proses perbaikan.
-
-Proses:
-- Memeriksa syntax menggunakan Python AST.
-- Jika syntax valid, kode dapat dieksekusi untuk mendeteksi runtime error.
-- Mengidentifikasi jenis error dan informasi pendukung seperti pesan error serta baris kode yang bermasalah.
-
-Contoh:
+Example:
 
 ```python
+SOURCE_CODE = """
 x = 10
 y = 0
 
 print(x / y)
+"""
 ```
 
-Hasil diagnosis:
+This example contains a ZeroDivisionError.
 
-```text
-Error Type: ZeroDivisionError
+### Step 2: Run the Program
+
+Execute:
+
+```bash
+python main.py
 ```
 
-Jika source code tidak memiliki error, workflow dapat langsung dihentikan tanpa menjalankan RAG dan Code Fixer.
+### Step 3: Automated Debugging
 
-**2. RAG Specialist**
+The system automatically:
 
-Bertugas mencari solusi berdasarkan dokumentasi yang tersimpan di Knowledge Base.
+1. Analyzes the provided source code.
+2. Detects syntax or runtime errors.
+3. Searches the knowledge base for relevant debugging information.
+4. Rewrites the search query if relevant knowledge cannot be found.
+5. Generates a proposed code fix.
+6. Validates the generated code.
+7. Requests human approval before applying the patch.
 
-RAG menggunakan dua proses utama:
+### Step 4: Human Approval
 
-- Retrieval: mencari dokumen yang relevan menggunakan ChromaDB.
-- Augmentation: memberikan informasi hasil pencarian kepada Code Fixer sebagai referensi perbaikan.
+The system pauses before applying the proposed patch.
 
-Knowledge Base terdiri dari:
+The user can approve or reject the proposed modification.
 
-| File | Isi |
-|---|---|
-| `syntax_errors.txt` | Informasi dan solusi syntax error |
-| `runtime_errors.txt` | Informasi dan solusi runtime error |
-| `debugging_guide.txt` | Strategi dan panduan debugging |
-
-Konfigurasi retrieval:
-
-```python
-k = 2
-DISTANCE_THRESHOLD = 0.5
-```
-
-Artinya:
-- Sistem mengambil maksimal dua dokumen terdekat.
-- Dokumen hanya diterima jika distance score tidak lebih besar dari 0.5.
-- Dokumen yang tidak memenuhi threshold tidak diberikan kepada Code Fixer.
-
-*Catatan: Threshold 0.5 merupakan konfigurasi pengujian saat ini, bukan nilai optimal untuk semua jenis error.*
-
-**Agentic RAG — Query Rewriting**
-
-Jika pencarian pertama menghasilkan `NOT_FOUND`, RAG Specialist meminta Qwen untuk membuat query baru.
-
-Alurnya:
-
-```text
-Initial Search
-      |
-      v
-  ChromaDB
-      |
-      v
- Documents Found?
-    /       \
-  YES        NO
-   |          |
-   v          v
-  FOUND    Query Rewriting
-              |
-              v
-          Search Again
-              |
-              v
-        Documents Found?
-           /      \
-         YES       NO
-          |         |
-          v         v
-        FOUND   NOT_FOUND
-                    |
-                    v
-              Code Fixer
-```
-
-Sistem memiliki batas maksimal dua percobaan pencarian. Jika pencarian tetap tidak menemukan dokumen relevan, Supervisor dapat mengarahkan proses ke Code Fixer menggunakan informasi diagnosis yang tersedia.
-
-**3. Code Fixer**
-
-Bertugas menghasilkan source code yang sudah diperbaiki.
-
-Input:
-- Source code awal.
-- Jenis error.
-- Pesan error.
-- Baris kode yang bermasalah.
-- Informasi dari Knowledge Base jika tersedia.
-
-Code Fixer menggunakan Qwen 2.5:7b untuk menghasilkan perbaikan.
-
-Hasilnya disimpan di:
-
-```text
-workspace/fixed_code.py
-```
-
-**4. Supervisor**
-
-Supervisor mengatur jalannya workflow.
-
-Tugasnya:
-- Menerima hasil diagnosis.
-- Menentukan apakah perlu menjalankan RAG Specialist.
-- Menentukan kapan Code Fixer harus dijalankan.
-- Mengatur proses validasi.
-- Menghentikan workflow jika tidak ada perbaikan yang diperlukan atau proses gagal.
-
-Supervisor memastikan setiap agent bekerja sesuai urutan dan kondisi yang ditentukan.
-
-**5. Validation**
-
-Setelah Code Fixer menghasilkan source code, sistem melakukan validasi.
-
-Pemeriksaan meliputi:
-- Memastikan file hasil perbaikan tidak kosong.
-- Memeriksa syntax menggunakan AST.
-- Menjalankan kode hasil perbaikan menggunakan subprocess.
-- Membatasi waktu eksekusi dengan timeout.
-
-Jika hasil validasi gagal, patch tidak dilanjutkan ke tahap persetujuan.
-
-**6. Human-in-the-Loop**
-
-Sebelum perubahan diterapkan, sistem meminta persetujuan manusia.
-
-Contoh:
-
-```text
-========== HUMAN APPROVAL ==========
-
-Proposed Fixed Code:
-
-x = 10
-y = 0
-
-if y != 0:
-    print(x / y)
-else:
-    print("Cannot divide by zero")
-
-Apply this patch? (y/n):
-```
-
-Jika pengguna memilih:
-
-- `y`: patch disetujui dan source code diperbarui.
-- `n`: patch ditolak dan source code awal tidak diperbarui.
-
-Implementasi menggunakan LangGraph `interrupt_before` dan `MemorySaver` agar workflow dapat dihentikan sementara dan dilanjutkan setelah keputusan pengguna.
+- Approve: The corrected code is applied to the target file.
+- Reject: The original code remains unchanged.
 
 ---
 
-## 5. How the System Works
+## 6. Multi-Agent Architecture
 
-Berikut alur lengkap sistem dari awal hingga selesai:
+The project uses a Supervisor-Worker architecture.
 
-```text
-        USER SELECTS TEST CASE
-                  |
-                  v
-          SYNTAX CHECKER
-                  |
-                  v
-          Syntax / Runtime
-              Error?
-            /       \
-          NO         YES
-          |           |
-          v           v
-         END      SUPERVISOR
-                      |
-                      v
-                 RAG SPECIALIST
-                      |
-                      v
-                KNOWLEDGE BASE
-                      |
-                      v
-                 RETRIEVAL
-                      |
-                      v
-                Relevant Docs?
-                 /        \
-               YES         NO
-                |           |
-                |      QUERY REWRITING
-                |           |
-                |      RETRIEVAL AGAIN
-                |           |
-                +-----+-----+
-                      |
-                      v
-                  CODE FIXER
-                      |
-                      v
-                  VALIDATION
-                      |
-                      v
-                 Validation OK?
-                   /      \
-                 NO        YES
-                 |          |
-                 v          v
-                END     HUMAN APPROVAL
-                            |
-                       /         \
-                     YES          NO
-                      |            |
-                      v            v
-                 APPLY PATCH   REJECT PATCH
-                      |            |
-                      v            v
-                PATCH APPLIED  PATCH REJECTED
-```
+### Syntax Checker Agent
+
+Responsible for:
+
+- Checking Python syntax using AST.
+- Executing code to detect runtime errors.
+- Identifying error types and error messages.
+
+### Supervisor Agent
+
+Responsible for:
+
+- Managing the debugging workflow.
+- Deciding which agent should execute next.
+- Routing between the Syntax Checker, RAG Specialist, and Code Fixer.
+- Managing retry attempts.
+
+### RAG Specialist Agent
+
+Responsible for:
+
+- Searching the debugging knowledge base.
+- Retrieving relevant error documentation.
+- Evaluating retrieval relevance.
+- Rewriting queries when relevant information is not found.
+
+### Code Fixer Agent
+
+Responsible for:
+
+- Analyzing the detected error.
+- Using retrieved debugging knowledge.
+- Generating corrected Python code.
+- Saving the proposed fix.
 
 ---
 
-## 6. ReAct Diagnostic Loop
+## 7. ReAct Diagnostic Loop
 
-Project ini juga menerapkan konsep ReAct (Reasoning and Acting).
+The system implements the ReAct pattern:
 
-ReAct memiliki tiga tahapan:
+**Thought → Action → Observation**
 
-1. **Thought** — Agent menentukan tindakan yang perlu dilakukan.
-2. **Action** — Agent menjalankan tool atau melakukan pencarian.
-3. **Observation** — Agent menerima dan mengevaluasi hasil tindakan.
+### Thought
 
-Contoh:
+The agent determines what action should be performed.
 
-```text
-========== REACT STEP ==========
+### Action
 
-[THOUGHT]
-Agent harus memeriksa syntax Python terlebih dahulu.
+The agent selects and executes an available tool.
 
-[ACTION]
-Execute syntax_checker_tool
+### Observation
 
-[OBSERVATION]
-{
-    "status": "SUCCESS",
-    "has_error": true,
-    "error_type": "ZeroDivisionError"
-}
-```
+The agent receives and evaluates the tool result.
 
-Proses ini dicatat menggunakan `trace_logger.py` sehingga aktivitas agent dapat diperiksa kembali dalam Debug Mode.
+This process continues until the debugging workflow reaches its next stage.
+
+The system also records the execution trace for debugging and demonstration purposes.
 
 ---
 
-## 7. Demo Mode & Debug Mode
+## 8. Agentic RAG with Self-Correction
 
-Aplikasi menyediakan dua mode tampilan.
+The RAG Specialist uses ChromaDB to retrieve relevant debugging information.
 
-Pengaturan terdapat di `main.py`:
+### Retrieval Process
+
+1. Receive the detected error and its context.
+2. Search the knowledge base.
+3. Evaluate the similarity distance of retrieved documents.
+4. If relevant documents are found, provide them to the Code Fixer.
+5. If no relevant documents are found, generate a rewritten query.
+6. Retry retrieval using the rewritten query.
+7. If the retry limit is reached, the Supervisor can route directly to the Code Fixer.
+
+This mechanism allows the system to recover from unsuccessful knowledge retrieval attempts.
+
+---
+
+## 9. Code Validation
+
+After generating a proposed fix, the system validates the output.
+
+Validation includes:
+
+- Checking whether generated code is empty.
+- Checking Python syntax using AST.
+- Executing the generated code.
+- Detecting remaining errors.
+- Applying a timeout to prevent indefinite execution.
+
+If validation fails, the workflow does not proceed to patch approval.
+
+---
+
+## 10. Human-in-the-Loop
+
+The system uses LangGraph's interrupt mechanism and MemorySaver to pause the workflow before applying modifications.
+
+The proposed patch must be approved by the user.
+
+This prevents the system from automatically modifying the original source code without human confirmation.
+
+---
+
+## 11. Demo and Debug Modes
+
+The project provides two execution modes.
+
+### Demo Mode
 
 ```python
 DEBUG_MODE = False
 ```
 
-**Demo Mode**
+Displays a simplified debugging result, suitable for presentations and live demonstrations.
 
-```python
-DEBUG_MODE = False
-```
-
-Digunakan untuk demonstrasi aplikasi.
-
-Menampilkan:
-- Diagnosis error.
-- Ringkasan aktivitas setiap agent.
-- Hasil validasi.
-- Keputusan Human Approval.
-- Hasil akhir patch.
-
-**Debug Mode**
+### Debug Mode
 
 ```python
 DEBUG_MODE = True
 ```
 
-Digunakan untuk memeriksa proses internal sistem.
-
-Menampilkan:
-- Detail proses setiap agent.
-- Query RAG.
-- Distance score ChromaDB.
-- Hasil Query Rewriting.
-- Thought, Action, Observation.
-- Supervisor routing.
-- Hasil validasi dan patch.
+Displays detailed execution logs, including the ReAct Thought, Action, and Observation trace.
 
 ---
 
-## 8. Available Test Cases
+## 12. Knowledge Base
 
-Jalankan aplikasi dengan:
+The debugging knowledge base is stored in the `knowledge_base/` directory.
+
+| File | Description |
+|---|---|
+| syntax_errors.txt | Python syntax error information |
+| runtime_errors.txt | Common runtime error information |
+| debugging_guide.txt | General debugging techniques |
+
+The documents are embedded and stored in ChromaDB for semantic retrieval.
+
+If the knowledge base changes, rebuild or update the ChromaDB collection using the project's indexing process.
+
+---
+
+## 13. Example Errors
+
+The system can be tested using different Python errors by changing `SOURCE_CODE` in `main.py`.
+
+Examples include:
+
+- ZeroDivisionError
+- IndexError
+- KeyError
+- AttributeError
+- SyntaxError
+
+The `test_case.py` file may also be used for internal testing and development.
+
+---
+
+## 14. Important Notes
+
+- The source code is configured directly inside `main.py`.
+- No terminal input is required.
+- Ollama must be running before executing the system.
+- The required Ollama models must already be downloaded.
+- The generated code should be reviewed before approval.
+- Code execution should be performed in a controlled environment.
+
+---
+
+## 15. Project Objective
+
+This project demonstrates how Agentic AI can be used to automate software debugging through reasoning, tool execution, knowledge retrieval, multi-agent collaboration, code generation, validation, and human supervision.
+```
+
+## 3. Cara menjalankan
 
 ```powershell
+# Aktifkan virtual environment
+.venv\Scripts\Activate.ps1
+
+# Pastikan Ollama aktif
+ollama list
+
+# Jalankan debugger
 python main.py
 ```
 
-Pilih salah satu test case berikut:
-
-| Test Case | Error | Tujuan Pengujian |
-|---|---|---|
-| `valid` | Tidak ada error | Memastikan kode valid tidak perlu diperbaiki |
-| `zerodivision` | ZeroDivisionError | Menguji perbaikan pembagian dengan nol |
-| `indexerror` | IndexError | Menguji perbaikan akses index list |
-| `keyerror` | KeyError | Menguji perbaikan akses dictionary |
-| `syntax` | SyntaxError | Menguji pendeteksian dan perbaikan syntax |
-| `attributeerror` | AttributeError | Menguji retrieval dan Query Rewriting |
-
-Untuk pengujian, coba juga kedua pilihan Human Approval:
-- Masukkan `y` untuk menyetujui patch.
-- Masukkan `n` untuk menolak patch.
-
-Dengan demikian, sistem dapat menunjukkan bahwa keputusan manusia benar-benar memengaruhi penerapan perbaikan.
-
----
-
-## 9. Important Notes
-
-**1. Knowledge Base berubah**
-
-ChromaDB menggunakan persistent storage di folder `chroma_db`.
-
-Jika isi file Knowledge Base diubah, database lama tidak otomatis diperbarui oleh program saat ini.
-
-Untuk membangun ulang database berdasarkan dokumen terbaru:
-
-1. Hentikan aplikasi.
-2. Hapus folder `chroma_db`.
-3. Jalankan kembali:
-
-```powershell
-python main.py
-```
-
-Sistem akan membuat vector database baru dari dokumen Knowledge Base.
-
-**2. Human Approval**
-
-Jangan menganggap kode yang lolos Validation otomatis diterapkan.
-
-Patch hanya diterapkan jika pengguna menyetujuinya.
-
-**3. Ollama**
-
-Pastikan Ollama aktif dan kedua model sudah tersedia sebelum menjalankan aplikasi.
-
-**4. Workspace**
-
-File `buggy_code.py` merupakan target source code yang digunakan dalam proses debugging. File `fixed_code.py` merupakan hasil perbaikan yang dibuat oleh Code Fixer.
-
----
-
-## 10. Troubleshooting
-
-| Kendala | Solusi |
-|---|---|
-| `ModuleNotFoundError` | Aktifkan `.venv` dan install dependencies |
-| Ollama connection error | Pastikan aplikasi Ollama berjalan |
-| Model not found | Jalankan `ollama pull qwen2.5:7b` atau `ollama pull nomic-embed-text` |
-| ChromaDB tidak memperbarui dokumen | Hapus folder `chroma_db`, lalu jalankan ulang aplikasi |
-| Syntax atau runtime error saat menjalankan aplikasi | Periksa traceback dan file yang disebutkan |
-| Query Rewriting tidak berjalan | Periksa hasil retrieval, threshold, dan batas pencarian pada RAG Specialist |
-
----
-
-## 11. Project Summary
-
-Automated Code Debugger menggabungkan beberapa konsep Agentic AI dalam satu workflow:
-
-| Konsep | Implementasi |
-|---|---|
-| ReAct | Thought → Action → Observation |
-| Agentic RAG | ChromaDB retrieval dan Query Rewriting |
-| Multi-Agent System | Supervisor dan worker agents |
-| StateGraph | Pengaturan workflow menggunakan LangGraph |
-| Human-in-the-Loop | Persetujuan sebelum patch diterapkan |
-| Local LLM | Qwen 2.5:7b melalui Ollama |
-| Vector Database | ChromaDB |
-| Validation | AST dan subprocess execution |
-
-**Tujuan akhir sistem:** mendeteksi kesalahan Python, mencari referensi solusi, menghasilkan perbaikan secara otomatis, memvalidasi hasil perbaikan, dan meminta persetujuan manusia sebelum mengubah source code awal.
-
----
-
-**End of README**
+**Penting:** Karena `main.py` di atas adalah template, saya perlu melihat `main.py`, `state.py`, dan `graph.py` versi terakhirmu untuk memastikan nama state dan mekanisme Human Approval benar-benar cocok. Dengan begitu, saya bisa membuat versi final yang bisa langsung dijalankan tanpa merusak implementasi yang sudah selesai.

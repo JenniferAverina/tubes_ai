@@ -1,6 +1,7 @@
-class QuantumFlux:
-    def __init__(self):
-        self.nonexistent_dimension = "added for testing"
+x = 10
+y = 0
 
-obj = QuantumFlux()
-print(obj.nonexistent_dimension)
+if y != 0:
+    print(x / y)
+else:
+    print("Cannot divide by zero")
