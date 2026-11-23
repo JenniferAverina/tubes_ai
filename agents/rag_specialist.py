@@ -1,6 +1,3 @@
-
-# agents/rag_specialist.py
-
 import os
 
 from langchain_ollama import OllamaEmbeddings, ChatOllama
@@ -8,6 +5,7 @@ from langchain_chroma import Chroma
 from langchain_core.documents import Document
 
 from state import AgentState
+from tools.trace_logger import log_trace
 
 
 # ==========================================
@@ -138,7 +136,7 @@ def rag_specialist_node(state: AgentState) -> dict:
     vectorstore = get_vectorstore()
 
     # ======================================
-    # 5. QUERY FORMULATION
+    # 5. QUERY FORMULATION / REWRITING
     # ======================================
 
     if attempt == 0:
@@ -153,6 +151,8 @@ def rag_specialist_node(state: AgentState) -> dict:
         thought_msg = (
             f"Initial KB search for {error_type}: '{query}'"
         )
+
+        action_msg = "Formulate initial Knowledge Base search query."
 
     else:
 
@@ -193,8 +193,20 @@ Output ONLY the search query.
             f"Rewrote query to: '{rewritten}'"
         )
 
+        action_msg = "Invoke Qwen to rewrite the previous search query."
+
     print("\n[RAG QUERY]")
     print(query)
+
+    # Log query formulation / rewriting
+    trace_entry = log_trace(
+        agent="RAG_SPECIALIST",
+        thought=thought_msg,
+        action=action_msg,
+        observation=f"Search query prepared: {query}"
+    )
+
+    trace.append(trace_entry)
 
     # ======================================
     # 6. VECTOR SEARCH
@@ -248,6 +260,7 @@ Output ONLY the search query.
         )
 
     print("\n[RAG RESULT]")
+
     print(
         "FOUND"
         if knowledge_result != "NOT_FOUND"
@@ -255,24 +268,26 @@ Output ONLY the search query.
     )
 
     # ======================================
-    # 8. REACT TRACE
+    # 8. REACT TRACE: RETRIEVAL
     # ======================================
 
-    trace.append({
-
-        "agent": "rag_specialist",
-
-        "attempt": attempt + 1,
-
-        "thought": thought_msg,
-
-        "action": (
+    trace_entry = log_trace(
+        agent="RAG_SPECIALIST",
+        thought=(
+            "Evaluate the retrieved documents using their "
+            "similarity distance scores and relevance threshold."
+        ),
+        action=(
             f"ChromaDB similarity_search_with_score("
             f"query='{query}', k=2)"
         ),
+        observation=(
+            f"Result: {'FOUND' if knowledge_result != 'NOT_FOUND' else 'NOT_FOUND'}. "
+            f"{obs_msg}"
+        )
+    )
 
-        "observation": obs_msg
-    })
+    trace.append(trace_entry)
 
     # ======================================
     # 9. RETURN UPDATED STATE

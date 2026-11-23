@@ -1,3 +1,4 @@
+
 import sys
 import json
 from pathlib import Path
@@ -10,6 +11,7 @@ from langchain_core.messages import ToolMessage
 
 from tools.syntax_tool import check_syntax
 from tools.execution_tool import execute_code
+from tools.trace_logger import log_trace
 from state import AgentState
 
 
@@ -26,6 +28,7 @@ llm = ChatOllama(
 # ==========================================
 # 2. DEFINE AVAILABLE TOOLS
 # ==========================================
+
 @tool
 def syntax_checker_tool(source_code: str) -> str:
     """Memeriksa syntax error pada source code Python."""
@@ -53,23 +56,43 @@ llm_with_tools = llm.bind_tools(
     [syntax_checker_tool, execution_tool]
 )
 
+
 # ==========================================
 # 3. REACT SYNTAX CHECKER WORKER
 # ==========================================
+
 def syntax_checker_node(state: AgentState) -> dict:
+
     source_code = state.get("source_code", "")
+    react_trace = list(state.get("react_trace", []))
+
+    # ======================================
+    # EMPTY INPUT HANDLING
+    # ======================================
 
     if not source_code.strip():
+
+        diagnosis = {
+            "status": "ERROR",
+            "error_type": "EmptyInput",
+            "error_message": "Source code is empty.",
+            "line": None
+        }
+
+        trace = log_trace(
+            agent="SYNTAX_CHECKER",
+            thought="Source code kosong sehingga proses diagnosis tidak dapat dilanjutkan.",
+            action="Check source code input",
+            observation=diagnosis
+        )
+
+        react_trace.append(trace)
+
         return {
             "syntax_result": None,
             "execution_result": None,
-            "react_trace": [],
-            "diagnosis": {
-                "status": "ERROR",
-                "error_type": "EmptyInput",
-                "error_message": "Source code is empty.",
-                "line": None
-            }
+            "diagnosis": diagnosis,
+            "react_trace": react_trace
         }
 
     print("\n========== REACT AGENT START ==========")
@@ -102,41 +125,55 @@ def syntax_checker_node(state: AgentState) -> dict:
 
     syntax_result = None
     execution_result = None
-    react_trace = []
 
     # ======================================
     # 4. REACT LOOP: THOUGHT-ACTION-OBSERVATION
     # ======================================
+
     for step in range(4):
 
         print(f"\n========== REACT STEP {step + 1} ==========")
-
-        print("[THOUGHT] Qwen sedang menentukan tindakan berikutnya.")
 
         response = llm_with_tools.invoke(messages)
 
         messages.append(response)
 
+        # LLM tidak meminta tool tambahan
         if not response.tool_calls:
-            print("[OBSERVATION] Qwen tidak meminta tool tambahan.")
+
+            trace = log_trace(
+                agent="SYNTAX_CHECKER",
+                thought="Agent mengevaluasi apakah pemeriksaan yang diperlukan sudah selesai.",
+                action="Stop ReAct loop",
+                observation="Qwen tidak meminta tool tambahan."
+            )
+
+            react_trace.append(trace)
             break
 
         for call in response.tool_calls:
 
             tool_name = call["name"]
 
-            print(f"\n[ACTION] Qwen memilih: {tool_name}")
-            react_trace.append({
-            "step": step + 1,
-            "action": tool_name
-            })
-
+            # ======================================
             # SYNTAX TOOL
+            # ======================================
+
             if tool_name == "syntax_checker_tool":
 
+                thought = (
+                    "Agent harus memeriksa syntax Python terlebih dahulu "
+                    "sebelum menjalankan kode."
+                )
+
+                action = "Execute syntax_checker_tool"
+
                 if syntax_result is not None:
+
                     result = "Syntax Tool sudah pernah dijalankan."
+
                 else:
+
                     raw_result = syntax_checker_tool.invoke(
                         call["args"]
                     )
@@ -145,28 +182,48 @@ def syntax_checker_node(state: AgentState) -> dict:
 
                     result = raw_result
 
-                print("[OBSERVATION]", result)
-                react_trace[-1]["observation"] = result
+                trace = log_trace(
+                    agent="SYNTAX_CHECKER",
+                    thought=thought,
+                    action=action,
+                    observation=result
+                )
 
+                react_trace.append(trace)
+
+            # ======================================
             # EXECUTION TOOL
+            # ======================================
+
             elif tool_name == "execution_tool":
 
+                thought = (
+                    "Agent mengevaluasi hasil syntax checking. "
+                    "Execution hanya diperbolehkan jika syntax valid."
+                )
+
+                action = "Execute execution_tool"
+
                 if syntax_result is None:
+
                     result = (
                         "Execution ditolak. "
                         "Syntax Tool harus dijalankan terlebih dahulu."
                     )
 
                 elif syntax_result["has_error"]:
+
                     result = (
                         "Execution tidak dijalankan karena "
                         "Syntax Error ditemukan."
                     )
 
                 elif execution_result is not None:
+
                     result = "Execution Tool sudah pernah dijalankan."
 
                 else:
+
                     raw_result = execution_tool.invoke(
                         call["args"]
                     )
@@ -175,15 +232,33 @@ def syntax_checker_node(state: AgentState) -> dict:
 
                     result = raw_result
 
-                print("[OBSERVATION]", result)
-                react_trace[-1]["observation"] = result
+                trace = log_trace(
+                    agent="SYNTAX_CHECKER",
+                    thought=thought,
+                    action=action,
+                    observation=result
+                )
+
+                react_trace.append(trace)
+
+            # ======================================
+            # UNKNOWN TOOL
+            # ======================================
 
             else:
-                result = "Tool tidak tersedia."
 
-                print("[OBSERVATION]", result)
-                react_trace[-1]["observation"] = result
+                result = f"Tool tidak tersedia: {tool_name}"
 
+                trace = log_trace(
+                    agent="SYNTAX_CHECKER",
+                    thought="Agent menerima permintaan tool yang tidak terdaftar.",
+                    action=f"Reject tool: {tool_name}",
+                    observation=result
+                )
+
+                react_trace.append(trace)
+
+            # Kirim hasil tool kembali ke LLM
             messages.append(
                 ToolMessage(
                     content=str(result),
@@ -191,20 +266,22 @@ def syntax_checker_node(state: AgentState) -> dict:
                 )
             )
 
-        # Hentikan jika syntax error sudah ditemukan.
+        # Hentikan jika syntax error ditemukan
         if syntax_result is not None and syntax_result["has_error"]:
             break
 
-        # Hentikan jika kedua pemeriksaan sudah selesai.
+        # Hentikan jika kedua pemeriksaan selesai
         if syntax_result is not None and execution_result is not None:
             break
 
-    # ======================================
+    # ==========================================
     # 5. GENERATE FINAL DIAGNOSIS
-    # ======================================
+    # ==========================================
+
     print("\n========== FINAL DIAGNOSIS ==========")
 
     if syntax_result is None:
+
         diagnosis = {
             "status": "ERROR",
             "error_type": "DiagnosticIncomplete",
@@ -250,12 +327,15 @@ def syntax_checker_node(state: AgentState) -> dict:
             "line": None
         }
 
-    print("[OBSERVATION]", diagnosis)
-    react_trace.append({
-    "step": "final",
-    "action": "generate_diagnosis",
-    "observation": diagnosis
-    })
+    # Log final diagnosis
+    trace = log_trace(
+        agent="SYNTAX_CHECKER",
+        thought="Agent menyimpulkan hasil diagnosis berdasarkan hasil Syntax Tool dan Execution Tool.",
+        action="Generate final diagnosis",
+        observation=diagnosis
+    )
+
+    react_trace.append(trace)
 
     return {
         "syntax_result": syntax_result,
@@ -268,6 +348,7 @@ def syntax_checker_node(state: AgentState) -> dict:
 # ==========================================
 # 6. TESTING
 # ==========================================
+
 if __name__ == "__main__":
 
     test_state = {
@@ -276,12 +357,15 @@ angka = 10
 hasil = angka / 0
 
 print(hasil)
-"""
+""",
+        "react_trace": []
     }
+
     result = syntax_checker_node(test_state)
 
     print("\n========== WORKER RESULT ==========")
 
     for key, value in result.items():
+
         print(f"\n{key}:")
         print(value)

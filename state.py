@@ -34,3 +34,10 @@ class AgentState(TypedDict, total=False):
 
     # Workflow information
     messages: list[str]
+
+    # validation
+    validation_status: str
+    validation_result: Optional[dict[str, Any]]
+    validation_message: str
+
+    react_trace: list[dict[str, Any]]

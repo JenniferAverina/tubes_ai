@@ -1,2 +1,7 @@
-numbers = [1, 2, 3]
-print(numbers[2])
+x = 10
+y = 0
+
+try:
+    print(x / y)
+except ZeroDivisionError:
+    print("Cannot divide by zero")

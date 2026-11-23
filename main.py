@@ -1,57 +1,88 @@
 
 from pathlib import Path
+from uuid import uuid4
+
 from graph import graph
-from test_case import TEST_CASES
+
+from tools.trace_logger import display_trace
+# ==========================================
+# 1. RUN AUTOMATED DEBUGGER
+# ==========================================
 
 def run_debugger(source_code: str):
 
-    # 1. Siapkan workspace dan file target
+    # Prepare workspace
     workspace = Path("workspace").resolve()
     workspace.mkdir(exist_ok=True)
 
     target_file = workspace / "buggy_code.py"
-    target_file.write_text(source_code, encoding="utf-8")
 
-    # 2. Initial state
+    target_file.write_text(
+        source_code,
+        encoding="utf-8"
+    )
+
+    # ======================================
+    # 2. INITIAL STATE
+    # ======================================
+
     initial_state = {
         "source_code": source_code,
         "file_path": str(target_file),
+
         "approval": None,
         "patch_applied": False,
+
         "react_trace": [],
         "messages": [],
+
         "search_attempt": 0,
-        "fix_attempts": 0
+        "fix_attempts": 0,
+
+        "knowledge_result": "NOT_FOUND"
     }
 
+    # Unique session ID for every run
     config = {
         "configurable": {
-            "thread_id": "debug-session-001"
+            "thread_id": str(uuid4())
         }
     }
 
     print("\n========== AUTOMATED DEBUGGER ==========")
 
-    # 3. Jalankan graph
+    # ======================================
+    # 3. RUN GRAPH
+    # ======================================
+
     result = graph.invoke(
         initial_state,
         config=config
     )
 
-    # 4. Periksa graph state
+    # ======================================
+    # 4. CHECK GRAPH STATE
+    # ======================================
+
     snapshot = graph.get_state(config)
 
     print("\n========== DEBUG GRAPH STATE ==========")
+
     print("Next nodes:", snapshot.next)
+
     print(
         "Fixed code exists:",
         bool(snapshot.values.get("fixed_code"))
     )
 
-    # 5. Human-in-the-Loop
-    if snapshot.next and "apply_patch" in snapshot.next:
+    # ======================================
+    # 5. HUMAN-IN-THE-LOOP
+    # ======================================
+
+    if "apply_patch" in snapshot.next:
 
         print("\n========== HUMAN APPROVAL ==========")
+
         print("\nProposed Fixed Code:")
         print(snapshot.values.get("fixed_code", ""))
 
@@ -61,19 +92,32 @@ def run_debugger(source_code: str):
 
         approval = choice == "y"
 
+        print(
+            "\nApproval decision:",
+            "APPROVED" if approval else "REJECTED"
+        )
+
+        # Update approval state
         graph.update_state(
             config,
             {"approval": approval}
         )
 
-        # Resume graph setelah keputusan user
+        # Resume graph after human decision
         result = graph.invoke(
             None,
             config=config
         )
 
-    else:
-        result = snapshot.values
+    # ======================================
+    # 6. GET FINAL STATE
+    # ======================================
+
+    display_trace(result.get("react_trace", []))
+
+    # ======================================
+    # 7. DISPLAY FINAL RESULT
+    # ======================================
 
     print("\n========== DEBUGGER RESULT ==========")
 
@@ -99,18 +143,33 @@ def run_debugger(source_code: str):
     print(result.get("next_worker"))
 
     print("\nMessages:")
+
     for message in result.get("messages", []):
         print("-", message)
 
+   
+    
     print("\n=======================================")
 
+
+# ==========================================
+# 9. MAIN PROGRAM
+# ==========================================
 
 if __name__ == "__main__":
 
     code = """
-x = 10
-y = 0
-print(x / y)
-"""
+    x = 10
+    y = 0
+    print(x / y)
+    """
 
-    run_debugger(TEST_CASES[""])
+
+    source_code = """
+    x = 10
+    y = 0
+
+    print(x / y)
+    """
+
+    run_debugger(source_code)

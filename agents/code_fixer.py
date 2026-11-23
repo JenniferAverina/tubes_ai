@@ -1,12 +1,11 @@
 
-# agents/code_fixer.py
-
 import os
 import re
 
 from langchain_ollama import ChatOllama
 
 from state import AgentState
+from tools.trace_logger import log_trace
 
 
 # ==========================================
@@ -50,7 +49,6 @@ def code_fixer_node(state: AgentState) -> dict:
     print("\n========== CODE FIXER START ==========")
 
     source_code = state.get("source_code", "")
-
     diagnosis = state.get("diagnosis") or {}
 
     knowledge = state.get(
@@ -104,6 +102,7 @@ def code_fixer_node(state: AgentState) -> dict:
     if knowledge and knowledge != "NOT_FOUND":
 
         kb_context = knowledge
+        kb_status = "FOUND"
 
         print("\nKnowledge Base: FOUND")
 
@@ -113,6 +112,8 @@ def code_fixer_node(state: AgentState) -> dict:
             "No specific Knowledge Base entry found. "
             "Apply standard Python debugging best practices."
         )
+
+        kb_status = "NOT_FOUND"
 
         print("\nKnowledge Base: NOT_FOUND")
         print("Using debugging best practices fallback.")
@@ -171,7 +172,19 @@ INSTRUCTIONS:
 
     if not fixed_code.strip():
 
-        print("ERROR: Code Fixer returned empty code.")
+        observation = "Qwen returned empty code. No repair was generated."
+
+        trace_entry = log_trace(
+            agent="CODE_FIXER",
+            thought=(
+                f"Attempting to repair {error_type} "
+                f"at {location_detail}."
+            ),
+            action="Invoke Qwen to generate corrected Python code.",
+            observation=observation
+        )
+
+        trace.append(trace_entry)
 
         return {
             "fixed_code": "",
@@ -202,39 +215,37 @@ INSTRUCTIONS:
     # 10. REACT TRACE
     # ======================================
 
-    trace.append({
+    trace_entry = log_trace(
+        agent="CODE_FIXER",
 
-        "agent": "code_fixer",
-
-        "attempt": fix_attempts + 1,
-
-        "thought": (
+        thought=(
             f"Synthesizing code repair for {error_type} "
             f"at {location_detail}. "
-            f"Knowledge Base status: "
-            f"{'FOUND' if knowledge != 'NOT_FOUND' else 'NOT_FOUND'}."
+            f"Knowledge Base status: {kb_status}."
         ),
 
-        "action": (
+        action=(
             "Invoke ChatOllama (qwen2.5:7b) "
             "to generate patched code."
         ),
 
-        "observation": (
+        observation=(
             f"Generated {len(fixed_code.splitlines())} "
-            f"lines of corrected Python code."
+            f"lines of corrected Python code. "
+            f"Preview saved to {FIXED_CODE_PREVIEW_PATH}."
         )
-    })
+    )
+
+    trace_entry["attempt"] = fix_attempts + 1
+
+    trace.append(trace_entry)
 
     # ======================================
     # 11. RETURN UPDATED STATE
     # ======================================
 
     return {
-
         "fixed_code": fixed_code,
-
         "fix_attempts": fix_attempts + 1,
-
         "react_trace": trace
     }
