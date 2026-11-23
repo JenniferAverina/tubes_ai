@@ -29,7 +29,7 @@ llm = ChatOllama(
 PERSIST_DIR = "./chroma_db"
 KB_DIR = "./knowledge_base"
 
-DISTANCE_THRESHOLD = 1.2
+DISTANCE_THRESHOLD = 0.5
 
 
 # ==========================================
@@ -236,13 +236,23 @@ Output ONLY the search query.
 
         obs_msg = "No matching documents found."
 
-    elif results[0][1] > DISTANCE_THRESHOLD:
+    else:
+
+    # Filter setiap dokumen berdasarkan distance threshold
+        relevant_results = [
+            (doc, score)
+            for doc, score in results
+            if score <= DISTANCE_THRESHOLD
+        ]
+
+    if not relevant_results:
 
         knowledge_result = "NOT_FOUND"
 
         obs_msg = (
-            f"Best distance score {results[0][1]:.3f} "
-            f"exceeded threshold {DISTANCE_THRESHOLD}."
+            f"No relevant documents found. "
+            f"Best distance score: {results[0][1]:.3f}. "
+            f"Threshold: {DISTANCE_THRESHOLD}."
         )
 
     else:
@@ -250,13 +260,13 @@ Output ONLY the search query.
         knowledge_result = "\n\n".join(
             [
                 f"[{doc.metadata.get('source')}]\n{doc.page_content}"
-                for doc, score in results
+                for doc, score in relevant_results
             ]
         )
 
         obs_msg = (
-            f"Found {len(results)} relevant solution(s). "
-            f"Best distance score: {results[0][1]:.3f}."
+            f"Found {len(relevant_results)} relevant document(s). "
+            f"Best distance score: {relevant_results[0][1]:.3f}."
         )
 
     print("\n[RAG RESULT]")

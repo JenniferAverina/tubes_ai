@@ -1,6 +1,6 @@
+class QuantumFlux:
+    def __init__(self):
+        self.nonexistent_dimension = "added for testing"
 
-    x = 10
-    y = 0
-
-    print(x / y)
-    
+obj = QuantumFlux()
+print(obj.nonexistent_dimension)
