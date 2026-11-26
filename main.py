@@ -1,34 +1,27 @@
 
 from pathlib import Path
 from uuid import uuid4
-from contextlib import redirect_stdout, redirect_stderr
-from io import StringIO
+
 
 from graph import graph
 from tools.trace_logger import display_trace
-
-
+from test_case import TEST_CASES
 # ==========================================
 # 1. HARDCODED SOURCE CODE
 # ==========================================
 
-SOURCE_CODE = """
-x = 10
-y = 0
+# SOURCE_CODE = """
+# x = 10
+# y = 0
+# print(x / y)
+# """
+SOURCE_CODE = TEST_CASES["zerodivision"]
 
-print(x / y)
-"""
-
-
-# ==========================================
-# 2. CONFIGURATION
-# ==========================================
-
-DEBUG_MODE = False
+DEBUG_MODE = True
 
 
 # ==========================================
-# 3. RUN AUTOMATED DEBUGGER
+# 2. RUN AUTOMATED DEBUGGER
 # ==========================================
 
 def run_debugger(source_code: str):
@@ -48,20 +41,52 @@ def run_debugger(source_code: str):
     initial_state = {
         "source_code": source_code,
         "file_path": str(target_file),
+        "approval": None,
     }
 
     print("\n========== AUTOMATED CODE DEBUGGER ==========")
 
-    if DEBUG_MODE:
-        result = graph.invoke(initial_state, config=config)
-    else:
-        captured_output = StringIO()
+    # ==========================================
+    # 3. START GRAPH
+    # ==========================================
 
-        with redirect_stdout(captured_output), redirect_stderr(captured_output):
-            result = graph.invoke(initial_state, config=config)
+    result = graph.invoke(initial_state, config=config)
 
     # ==========================================
-    # 4. DISPLAY RESULT
+    # 4. CHECK HITL INTERRUPT
+    # ==========================================
+
+    snapshot = graph.get_state(config)
+
+    if "apply_patch" in snapshot.next:
+
+        print("\n========== HUMAN-IN-THE-LOOP ==========")
+
+        print("\nOriginal Code:")
+        print(target_file.read_text(encoding="utf-8"))
+
+        print("\n========== PROPOSED FIX ==========")
+        print(result.get("fixed_code", ""))
+
+        print("\nValidation:", result.get("validation_status"))
+
+        approval_input = input(
+            "\nApply this patch? (y/n): "
+        ).strip().lower()
+
+        approval = approval_input == "y"
+
+        # Update approval in checkpoint state
+        graph.update_state(
+            config,
+            {"approval": approval}
+        )
+
+        # Resume graph from interrupted apply_patch node
+        result = graph.invoke(None, config=config)
+
+    # ==========================================
+    # 5. DISPLAY RESULT
     # ==========================================
 
     print("\n========== DEBUGGER RESULT ==========")
@@ -81,8 +106,10 @@ def run_debugger(source_code: str):
 
     if result.get("patch_applied"):
         print("\nPatch Status: APPLIED")
+
     elif result.get("approval") is False:
         print("\nPatch Status: REJECTED")
+
     else:
         print("\nPatch Status: NOT APPLIED")
 
@@ -91,7 +118,7 @@ def run_debugger(source_code: str):
 
 
 # ==========================================
-# 5. MAIN
+# 6. MAIN
 # ==========================================
 
 if __name__ == "__main__":
